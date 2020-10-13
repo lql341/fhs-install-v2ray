@@ -34,6 +34,9 @@ systemd_cat_config() {
   if systemd-analyze --help | grep -qw 'cat-config'; then
     systemd-analyze --no-pager cat-config "$@"
   else
+    echo "${aoi}~~~~~~~~~~~~~~~~"
+    cat "$@" "$1".d/*
+    echo "${aoi}~~~~~~~~~~~~~~~~"
     echo "${red}warning: ${green}The systemd version on the current operating system is too low."
     echo "${red}warning: ${green}Please consider to upgrade the systemd or the operating system.${reset}"
   fi
@@ -116,27 +119,22 @@ identify_the_operating_system_and_architecture() {
       PACKAGE_MANAGEMENT_INSTALL='apt -y --no-install-recommends install'
       PACKAGE_MANAGEMENT_REMOVE='apt purge'
       package_provide_tput='ncurses-bin'
-      package_provide_bsdtar='libarchive-tools'
     elif [[ "$(type -P dnf)" ]]; then
       PACKAGE_MANAGEMENT_INSTALL='dnf -y install'
       PACKAGE_MANAGEMENT_REMOVE='dnf remove'
       package_provide_tput='ncurses'
-      package_provide_bsdtar='bsdtar'
     elif [[ "$(type -P yum)" ]]; then
       PACKAGE_MANAGEMENT_INSTALL='yum -y install'
       PACKAGE_MANAGEMENT_REMOVE='yum remove'
       package_provide_tput='ncurses'
-      package_provide_bsdtar='bsdtar'
     elif [[ "$(type -P zypper)" ]]; then
       PACKAGE_MANAGEMENT_INSTALL='zypper install -y --no-recommends'
       PACKAGE_MANAGEMENT_REMOVE='zypper remove'
       package_provide_tput='ncurses-utils'
-      package_provide_bsdtar='bsdtar'
     elif [[ "$(type -P pacman)" ]]; then
       PACKAGE_MANAGEMENT_INSTALL='pacman -Syu --noconfirm'
       PACKAGE_MANAGEMENT_REMOVE='pacman -Rsn'
       package_provide_tput='ncurses'
-      package_provide_bsdtar='libarchive'
     else
       echo "error: The script does not support the package manager in this operating system."
       exit 1
@@ -307,7 +305,7 @@ download_v2ray() {
 }
 
 decompression() {
-  if ! bsdtar -C "$TMP_DIRECTORY" -xf "$1"; then
+  if ! unzip -q "$1" -d "$TMP_DIRECTORY"; then
     echo 'error: V2Ray decompression failed.'
     "rm" -r "$TMP_DIRECTORY"
     echo "removed: $TMP_DIRECTORY"
@@ -515,6 +513,7 @@ main() {
   install_software "$package_provide_tput" 'tput'
   red=$(tput setaf 1)
   green=$(tput setaf 2)
+  aoi=$(tput setaf 6)
   reset=$(tput sgr0)
 
   # Parameter information
@@ -531,7 +530,7 @@ main() {
     echo 'warn: Install V2Ray from a local file, but still need to make sure the network is available.'
     echo -n 'warn: Please make sure the file is valid because we cannot confirm it. (Press any key) ...'
     read -r
-    install_software "$package_provide_bsdtar" 'bsdtar'
+    install_software 'unzip' 'unzip'
     decompression "$LOCAL_FILE"
   else
     # Normal way
@@ -546,7 +545,7 @@ main() {
         echo "removed: $TMP_DIRECTORY"
         exit 0
       fi
-      install_software "$package_provide_bsdtar" 'bsdtar'
+      install_software 'unzip' 'unzip'
       decompression "$ZIP_FILE"
     elif [[ "$NUMBER" -eq '1' ]]; then
       echo "info: No new version. The current version of V2Ray is $CURRENT_VERSION ."
