@@ -429,7 +429,7 @@ stop_v2ray() {
 
 check_update() {
   if [[ -f '/etc/systemd/system/v2ray.service' ]]; then
-    (get_version)
+    get_version
     local get_ver_exit_code=$?
     if [[ "$get_ver_exit_code" -eq '0' ]]; then
       echo "info: Found the latest release of V2Ray $RELEASE_VERSION . (Current release: $CURRENT_VERSION)"
@@ -534,7 +534,7 @@ main() {
       if [[ "$?" -eq '1' ]]; then
         "rm" -r "$TMP_DIRECTORY"
         echo "removed: $TMP_DIRECTORY"
-        exit 0
+        exit 1
       fi
       install_software 'unzip' 'unzip'
       decompression "$ZIP_FILE"
